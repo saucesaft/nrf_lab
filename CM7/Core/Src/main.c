@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "nrf24.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -159,6 +159,29 @@ Error_Handler();
   MX_USB_OTG_FS_PCD_Init();
   MX_SPI5_Init();
   /* USER CODE BEGIN 2 */
+
+  NRF24_begin(GPIOE, NRF_CN_Pin, NRF_CE_Pin, hspi5);
+
+#define send
+
+#ifdef receive
+  char recv_text[32] = {0};
+  NRF24_openReadingPipe(1, 0x11223344AALL);
+  NRF24_startListening();
+#endif
+
+#ifdef send
+  char send_text[32] = "RoboCooks";
+  NRF24_openWritingPipe(0x11223344AALL);
+  NRF24_stopListening();
+#endif
+
+  NRF24_setPALevel(RF24_PA_m12dB);
+  NRF24_setChannel(52);
+  NRF24_setAutoAck(false);
+  NRF24_setDataRate(RF24_2MBPS);
+  NRF24_setRetries(15, 15);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -166,7 +189,22 @@ Error_Handler();
   while (1)
   {
     /* USER CODE END WHILE */
+#ifdef receive
+	  if (NRF24_available()) {
+		  NRF24_read(&recv_text, sizeof(recv_text));
+		  recv_text[sizeof(recv_text) - 1] = '\0';
 
+		  printf("Recibido: %s\n\r", recv_text);
+	  }
+#endif
+
+#ifdef send
+	  NRF24_write(&send_text, sizeof(send_text));
+
+	  printf("Mensaje enviado: %s\n\r", send_text);
+
+	  HAL_Delay(500);
+#endif
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
